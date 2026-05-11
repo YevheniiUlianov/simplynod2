@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const RESIDENTIAL_TIERS = [
@@ -41,7 +41,8 @@ function getPricePerGB(gb: number, tiers: typeof RESIDENTIAL_TIERS) {
 }
 
 function formatTotal(total: number) {
-  return total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const [int, dec] = total.toFixed(2).split(".");
+  return int.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + dec;
 }
 
 export function PricingCalculator() {
@@ -193,7 +194,6 @@ export function PricingCalculator() {
           {/* Tick marks */}
           <div className="flex justify-between px-2 mb-10">
             {tiers.map((tier) => {
-              const pct = ((tier.gb - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100;
               const isActive = !isMax && gb >= tier.gb;
               return (
                 <button
@@ -215,7 +215,10 @@ export function PricingCalculator() {
           <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-10">
             {tiers.map((tier) => {
               const isCurrentTier = !isMax && (() => {
-                const idx = tiers.findLastIndex(t => gb >= t.gb);
+                let idx = -1;
+                for (let i = tiers.length - 1; i >= 0; i--) {
+                  if (gb >= tiers[i].gb) { idx = i; break; }
+                }
                 return tiers[idx]?.gb === tier.gb;
               })();
               return (
